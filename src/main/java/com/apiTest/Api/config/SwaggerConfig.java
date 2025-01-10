@@ -1,40 +1,51 @@
 package com.apiTest.Api.config;
 
-import java.util.Collections;
-
+import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.IntegerSchema;
+import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.media.ObjectSchema;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+
 
 @Configuration
 public class SwaggerConfig {
 
     @Bean
-    public Docket api() {
-        return new Docket(DocumentationType.OAS_30)
-                .select()
-                .apis(RequestHandlerSelectors.basePackage("com.apiTest.Api.rest"))
-                .paths(PathSelectors.any())
-                .build()
-                .apiInfo(apiInfo());
+    public OpenAPI openApiSpec() {
+        return new OpenAPI().components(new Components()
+                .addSchemas("ApiErrorResponse", new ObjectSchema()
+                        .addProperties("status", new IntegerSchema())
+                        .addProperties("code", new StringSchema())
+                        .addProperties("message", new StringSchema())
+                        .addProperties("fieldErrors", new ArraySchema().items(
+                                new Schema<ArraySchema>().$ref("ApiFieldError"))))
+                .addSchemas("ApiFieldError", new ObjectSchema()
+                        .addProperties("code", new StringSchema())
+                        .addProperties("message", new StringSchema())
+                        .addProperties("property", new StringSchema())
+                        .addProperties("rejectedValue", new ObjectSchema())
+                        .addProperties("path", new StringSchema())));
     }
-    
 
-    private ApiInfo apiInfo() {
-    return new ApiInfo(
-        "Authentication API",
-        "API documentation for authentication operations",
-        "1.0",
-        "Terms of service URL",
-        new Contact("Your Name", "www.example.com", "your.email@example.com"),
-        "License of API",
-        "License URL",
-        Collections.emptyList());
-}
+    @Bean
+    public OperationCustomizer operationCustomizer() {
+        // add error type to each operation
+        return (operation, handlerMethod) -> {
+            operation.getResponses().addApiResponse("4xx/5xx", new ApiResponse()
+                    .description("Error")
+                    .content(new Content().addMediaType("*/*", new MediaType().schema(
+                            new Schema<MediaType>().$ref("ApiErrorResponse")))));
+            return operation;
+        };
+    }
+
 }

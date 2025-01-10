@@ -1,16 +1,19 @@
+version: '3.8'
+
 services:
 
   api:
-    image: api # This should be the name of your built image
+    image: api  # This should be the name of your built image
     build:
       context: .  # Build the image using the Dockerfile in the current directory
     ports:
-      - "8080:8080"  # Map port 8080 on the host to port 8080 in the container
-    # environment:
-    #   - SPRING_PROFILES_ACTIVE=dev  # Example environment variable, if needed
+      - "8080:8080"  # Expose API on port 8080 to the host
     restart: always
     networks:
-      - keycloak_network
+      - keycloak_network  # All containers in the same custom network
+    command: >
+      /bin/sh -c "sleep 120 && ./gradlew bootrun"  
+
   postgres:
     image: postgres:latest
     environment:
@@ -18,13 +21,13 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: mydatabase
     ports:
-      - "5432:5432"
+      - "5432:5432"  # Expose PostgreSQL on port 5432 to the host (if you need external access)
     volumes:
       - ./src/main/resources/sql-scripts:/docker-entrypoint-initdb.d
       - /Users/ecouliba/Downloads/postgres_data:/var/lib/postgresql/data
     restart: always
     networks:
-      - keycloak_network
+      - keycloak_network  # Connect to the same network
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -32,12 +35,12 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@example.com  # Set your email
       PGADMIN_DEFAULT_PASSWORD: admin           # Set your password
     ports:
-      - "80:80"  # Expose pgAdmin on localhost:8080
+      - "80:80"  # Expose pgAdmin on localhost:80
     depends_on:
       - postgres
     restart: always
     networks:
-      - keycloak_network
+      - keycloak_network  # Connect to the same network
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -52,9 +55,9 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: adminpassword
     ports:
-      - "8081:8080"
+      - "8081:8081"  # Expose Keycloak on port 8081 to the host
     networks:
-      - keycloak_network
+      - keycloak_network  # Connect to the same network
     depends_on:
       - postgres
     command: start-dev
@@ -64,3 +67,4 @@ volumes:
 
 networks:
   keycloak_network:
+    driver: bridge  # Ensure the network is of type bridge (default)
