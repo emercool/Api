@@ -2,17 +2,17 @@ version: '3.8'
 
 services:
 
-  api:
-    image: api  # This should be the name of your built image
-    build:
-      context: .  # Build the image using the Dockerfile in the current directory
-    ports:
-      - "8080:8080"  # Expose API on port 8080 to the host
-    restart: always
-    networks:
-      - keycloak_network  # All containers in the same custom network
-    command: >
-      /bin/sh -c "sleep 120 && ./gradlew bootrun"  
+  # api:
+  #   image: api  # This should be the name of your built image
+  #   build:
+  #     context: .  # Build the image using the Dockerfile in the current directory
+  #   ports:
+  #     - "8080:8080"  # Expose API on port 8080 to the host
+  #   restart: always
+  #   networks:
+  #     - keycloak_network  # All containers in the same custom network
+  #   command: >
+  #     /bin/sh -c "sleep 120 && ./gradlew bootrun"  
 
   postgres:
     image: postgres:latest

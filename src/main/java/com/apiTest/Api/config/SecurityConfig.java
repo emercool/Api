@@ -18,7 +18,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) // Disable CSRF
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/resetpassword", "/auth/signUp", "/auth/signin").permitAll()
+                .requestMatchers("/auth/resetpassword", "/auth/signUp", "/auth/signin", "/api/**","/swagger-ui/index.html","/swagger-ui/**","/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated() // Other endpoints require authentication
             )
             .oauth2ResourceServer(oauth2 -> oauth2
